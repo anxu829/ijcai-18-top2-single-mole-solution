@@ -26,6 +26,8 @@ def same_cate(x):
     cate2 = set([i.split(':')[0] for i in x['predict_category_property'].split(';')])
     return len(cate & cate2)
 
+
+
 def same_property(x):
     property_a = set(x['item_property_list'].split(';'))
     a = []

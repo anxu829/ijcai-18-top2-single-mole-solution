@@ -1,4 +1,4 @@
-    # coding=utf-8
+# coding=utf-8
 # @author:bryan
 from multiprocessing import Pool
 from multiprocessing import cpu_count
@@ -96,14 +96,12 @@ def run_query_feature(i):
         query_min_time=np.min(tmp[(tmp['predict_category_property'] == row['predict_category_property'])]['context_timestamp'])
         query_all_min_time = np.min(tmp[(tmp['query'] == row['query'])]['context_timestamp'])
         query_1_min_time = np.min(tmp[(tmp['query1'] == row['query1'])]['context_timestamp'])
-        
         before_query_items= len(set(tmp[(tmp['context_timestamp'] <query_min_time)]['item_id']))
         before_query_all_items = len(set(tmp[(tmp['context_timestamp'] < query_all_min_time)]['item_id']))
         before_query_1_items = len(set(tmp[(tmp['context_timestamp'] < query_1_min_time)]['item_id']))
         before_query_shops = len(set(tmp[(tmp['context_timestamp'] < query_min_time)]['shop_id']))
         before_query_all_shops = len(set(tmp[(tmp['context_timestamp'] < query_all_min_time)]['shop_id']))
         before_query_1_shops = len(set(tmp[(tmp['context_timestamp'] < query_1_min_time)]['shop_id']))
-        
         query_max_time = np.max(tmp[(tmp['predict_category_property'] == row['predict_category_property'])]['context_timestamp'])
         query_all_max_time = np.max(tmp[(tmp['query'] == row['query'])]['context_timestamp'])
         query_1_max_time = np.max(tmp[(tmp['query1'] == row['query1'])]['context_timestamp'])
