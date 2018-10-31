@@ -250,8 +250,11 @@ def run_leak_feature( i):
         shop_cnt=len(set(tmp['shop_id']))
         brand_cnt=len(set(tmp['item_brand_id']))
         city_cnt=len(set(tmp['item_city_id']))
+        
         before_query_rate=len(set(tmp[(tmp['context_timestamp']<=row['context_timestamp'])&(tmp['predict_category_property'] == row['predict_category_property'])]['predict_category_property']))/query_cnt
+        
         after_query_rate=1-before_query_rate
+        
         before_query_all_rate = len(set(tmp[(tmp['context_timestamp'] <= row['context_timestamp']) & (tmp['query'] == row['query'])]['query'])) / query_all_cnt
         after_query_all_rate = 1 - before_query_all_rate
         before_query_1_rate = len(set(tmp[(tmp['context_timestamp'] <= row['context_timestamp']) & (tmp['query1'] == row['query1'])]['query1'])) / query_1_cnt
