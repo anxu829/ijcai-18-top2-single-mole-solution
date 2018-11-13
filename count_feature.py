@@ -81,12 +81,21 @@ def latest_day_feature(org):
 
 # calc data，join data
 # user_id,item_id,item_brand_id,shop_id,item_category_list,item_city_id,predict_category_property
+
+
 def cvr(c_data, j_data):
     col=['user_id','item_id','item_brand_id','shop_id','item_category_list','item_city_id','predict_category_property','context_page_id', 'query1', 'query']
+    
+    # 取出了后一部分数据的子列
     j_data=j_data[['instance_id']+col]
+    
+    # 取出了第一部分数据的用户的转化率信息
     user = c_data.groupby('user_id', as_index=False)['is_trade'].agg({'user_buy': 'sum', 'user_cnt': 'count'})
     user['user_today_cvr'] = (user['user_buy']) / (user['user_cnt'] + 3)
+    
+    # merge到第二部分数据中
     j_data = pd.merge(j_data, user[['user_id', 'user_today_cvr']], on='user_id', how='left')
+    
     for item in col[1:]:
         tmp=c_data.groupby(item, as_index=False)['is_trade'].agg({item+'_today_cvr': 'mean'})
         j_data = pd.merge(j_data, tmp, on=item, how='left')
@@ -96,6 +105,8 @@ def cvr(c_data, j_data):
             j_data = pd.merge(j_data, tmp, on=[col[i],col[j]], how='left')
             print([col[i],col[j]])
     return j_data
+
+
 # [['instance_id','today_user_cvr','today_item_cvr','today_brand_cvr','today_shop_cvr','today_cate_cvr','today_city_cvr']]
 
 def split(data, index, size):
@@ -105,26 +116,42 @@ def split(data, index, size):
     end = (index + 1) * size if (index + 1) * size < len(data) else len(data)
     return data[start:end]
 
+
+
 def today_cvr_feature(org):
     col = ['user_id', 'item_id', 'item_brand_id', 'shop_id', 'item_category_list', 'item_city_id',
            'predict_category_property', 'context_page_id', 'query1', 'query']
     data=org[org['day']==7]
+    # 获取第七天上午有交易信息的部分
+    
     train=data[data['is_trade']>-1]
+    
+    # 这部分是没有交易信息的部分
     predict=data[data['is_trade']<0]
+    
     predict=cvr(train,predict)
+    
+    
     trains=[]
     size=10
     for i in range(size):
+        # 又把train拆成了很多份
         trains.append(split(train, i, size))
+    
+    # 把predict 放到了res中
     res=[]
     res.append(predict)
     for i in range(size):
+        # 对每一份train 的子数据， 用其他部分数据 计算出来的转化率 作为这部分子数据的表征
         res.append(cvr(pd.concat([trains[j] for j in range(size) if i !=j]).reset_index(drop=True),trains[i]))
     data=pd.concat(res).reset_index(drop=True)
     #data=data[['instance_id','today_user_cvr','today_item_cvr','today_brand_cvr','today_shop_cvr','today_cate_cvr','today_city_cvr','today_query_cvr']]
     data=data.drop(col,axis=1)
     data.to_csv('../data/today_cvr_feature.csv', index=False)
     return data
+
+
+
 
 """
 #todo
@@ -154,6 +181,8 @@ def today_cvr_feature(org):
 """
 # ['user_id','item_id','item_brand_id','shop_id','item_category_list','item_city_id','predict_category_property','context_page_id', 'query1', 'query']
 def rank_6day_feature(data):
+    # grouby rank ：返回对应的数据在对应的组内的排序
+    # 这种按照 id 对cvr 进行排序的方法，很厉害
     data['user_cvr_brand_6day_rank']=data.groupby('item_brand_id')['user_6day_cvr'].rank(ascending=False,method='dense')
     data['user_cvr_shop_6day_rank'] = data.groupby('shop_id')['user_6day_cvr'].rank(ascending=False, method='dense')
     data['user_cvr_cate_6day_rank'] = data.groupby('item_category_list')['user_6day_cvr'].rank(ascending=False, method='dense')
@@ -234,7 +263,7 @@ def rank_today_feature(data):
 
 if __name__ == '__main__':
     org=pd.read_csv('../data/origion_concat.csv')
-	user_encoder_feature(org)
+	  user_encoder_feature(org)
     rank_7days_feature(all_days_feature(org))
     rank_6day_feature(latest_day_feature(org))
     rank_today_feature(today_cvr_feature(org))
